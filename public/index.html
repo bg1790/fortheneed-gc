@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>For The Need</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        font-family: Inter, system-ui, sans-serif;
+        background: #0f172a;
+        color: #e2e8f0;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        background:
+          radial-gradient(circle at top, rgba(59, 130, 246, 0.4), transparent 45%),
+          linear-gradient(180deg, #0f172a 0%, #111827 100%);
+      }
+
+      main {
+        width: min(92vw, 42rem);
+        padding: 3rem;
+        border-radius: 1.5rem;
+        background: rgba(15, 23, 42, 0.82);
+        border: 1px solid rgba(148, 163, 184, 0.18);
+        box-shadow: 0 24px 80px rgba(15, 23, 42, 0.45);
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.4rem 0.8rem;
+        border-radius: 999px;
+        background: rgba(59, 130, 246, 0.16);
+        color: #93c5fd;
+        font-size: 0.9rem;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+
+      h1 {
+        margin: 1rem 0 0.75rem;
+        font-size: clamp(2.5rem, 5vw, 4rem);
+        line-height: 1;
+      }
+
+      p {
+        margin: 0;
+        color: #cbd5e1;
+        font-size: 1.05rem;
+        line-height: 1.7;
+      }
+
+      .status {
+        margin-top: 1.5rem;
+        padding: 1rem 1.25rem;
+        border-radius: 1rem;
+        background: rgba(15, 118, 110, 0.16);
+        border: 1px solid rgba(45, 212, 191, 0.24);
+        color: #99f6e4;
+      }
+
+      .status.error {
+        background: rgba(153, 27, 27, 0.16);
+        border-color: rgba(248, 113, 113, 0.24);
+        color: #fecaca;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="eyebrow">Firebase first app</div>
+      <h1>For The Need</h1>
+      <p>
+        This starter page is ready for Firebase Hosting. Once deployed, it will
+        automatically load your Firebase project configuration and confirm the
+        connection.
+      </p>
+      <p class="status" id="status">Checking Firebase Hosting configuration…</p>
+    </main>
+    <script type="module">
+      const statusElement = document.getElementById("status");
+
+      const setStatus = (message, isError = false) => {
+        statusElement.textContent = message;
+        statusElement.classList.toggle("error", isError);
+      };
+
+      const initFirebase = async () => {
+        try {
+          const response = await fetch("/__/firebase/init.json", {
+            headers: { Accept: "application/json" },
+          });
+
+          if (!response.ok) {
+            throw new Error("Firebase Hosting config was not found.");
+          }
+
+          const firebaseConfig = await response.json();
+          const firebase = await import(
+            "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js"
+          );
+          const app = firebase.initializeApp(firebaseConfig);
+          const projectName = app.options.projectId || "your Firebase project";
+
+          setStatus(`Connected to ${projectName}. Your first Firebase app is live.`);
+        } catch (error) {
+          setStatus(
+            "Starter app is ready. Deploy with Firebase Hosting or run the Firebase Emulator Suite to load project config automatically.",
+            true,
+          );
+        }
+      };
+
+      initFirebase();
+    </script>
+  </body>
+</html>
