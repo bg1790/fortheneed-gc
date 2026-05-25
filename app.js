@@ -87,8 +87,6 @@ formEl.addEventListener("submit", async (event) => {
   } catch (error) {
     showStatus(error.message || "Save failed. Please try again.", true);
   } finally {
-    if (isConfigReady) {
-      saveBtn.disabled = false;
-    }
+    saveBtn.disabled = false;
   }
 });
