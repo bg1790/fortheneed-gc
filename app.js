@@ -19,8 +19,11 @@ worker.onmessage = (event) => {
   }
 };
 
-worker.onerror = () => {
-  statusEl.textContent = "Worker error. Please reload and try again.";
+worker.onerror = (event) => {
+  const detail = event?.message
+    ? ` (${event.message}${event.lineno ? ` @ line ${event.lineno}` : ""})`
+    : "";
+  statusEl.textContent = `Worker error. Please reload and try again.${detail}`;
 };
 
 function processInWorker(data) {
@@ -50,9 +53,11 @@ if (isConfigReady) {
     firebase.initializeApp(firebaseConfig);
   }
   database = firebase.database();
-  firebase.auth().signInAnonymously().catch(() => {
+  firebase.auth().signInAnonymously().catch((error) => {
     showStatus(
-      "Auth failed. Saving may not work until anonymous sign-in is enabled in Firebase Authentication.",
+      `Auth failed. Saving may not work until anonymous sign-in is enabled in Firebase Authentication. ${
+        error?.message || ""
+      }`.trim(),
       true
     );
   });
