@@ -13,7 +13,10 @@ Serve the `public/` directory with any static file server.
 3. Run `firebase deploy`.
 
 When the app is served by Firebase Hosting or the Firebase Emulator Suite, it will automatically read the hosting-provided Firebase config from `/__/firebase/init.json`.
-Simple vanilla Netlify walk-in app for volunteer events.
+
+## Walk-in app
+
+Simple vanilla Firebase walk-in app for volunteer events.
 
 ## Features
 - Collects walk-in first name, last name, and type:
