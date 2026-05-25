@@ -21,4 +21,4 @@ Simple vanilla Netlify walk-in app for volunteer events.
 - `worker.js` - background worker for validation/normalization
 
 ## Firebase setup
-Replace placeholder config values in `app.js` (or provide `window.FIREBASE_CONFIG`) before deployment.
+Provide Firebase config through `window.FIREBASE_CONFIG` before `app.js` is loaded.

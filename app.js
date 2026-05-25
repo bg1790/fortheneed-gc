@@ -37,22 +37,12 @@ function showStatus(message, isError = false) {
 }
 
 function getFirebaseConfig() {
-  if (window.FIREBASE_CONFIG) return window.FIREBASE_CONFIG;
-  return {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_AUTH_DOMAIN",
-    databaseURL: "YOUR_DATABASE_URL",
-    projectId: "YOUR_PROJECT_ID",
-    appId: "YOUR_APP_ID",
-  };
-}
-
-function hasPlaceholderConfig(config) {
-  return Object.values(config).some((value) => String(value).startsWith("YOUR_"));
+  if (!window.FIREBASE_CONFIG) return null;
+  return window.FIREBASE_CONFIG;
 }
 
 const firebaseConfig = getFirebaseConfig();
-const isConfigReady = !hasPlaceholderConfig(firebaseConfig);
+const isConfigReady = Boolean(firebaseConfig);
 let database = null;
 
 if (isConfigReady) {
@@ -61,11 +51,14 @@ if (isConfigReady) {
   }
   database = firebase.database();
   firebase.auth().signInAnonymously().catch(() => {
-    showStatus("Auth failed. Check Firebase Authentication settings.", true);
+    showStatus(
+      "Auth failed. Saving may not work until anonymous sign-in is enabled in Firebase Authentication.",
+      true
+    );
   });
 } else {
   saveBtn.disabled = true;
-  showStatus("Configure Firebase in app.js or set window.FIREBASE_CONFIG to enable saving.", true);
+  showStatus("Set window.FIREBASE_CONFIG before loading app.js to enable saving.", true);
 }
 
 formEl.addEventListener("submit", async (event) => {
@@ -86,7 +79,7 @@ formEl.addEventListener("submit", async (event) => {
     saveBtn.disabled = true;
     showStatus("Saving...");
 
-    const payload = await processInWorker({ firstName, lastName, walkinType });
+    const payload = await processInWorker({ firstName, lastName, walkinType, allowedTypes: ALLOWED_TYPES });
     await database.ref("walkins").push(payload);
 
     formEl.reset();
