@@ -29,7 +29,7 @@ Simple vanilla Firebase walk-in app for volunteer events.
   - `firebase-auth-compat.js`
   - `firebase-database-compat.js`
 - Stores walk-ins in Firebase Realtime Database
-- Uses a Web Worker (`worker.js`) for multithreaded payload processing
+- Uses a Web Worker (`worker.js`) for background payload processing
 
 ## Files
 - `index.html` - UI and SDK script includes
