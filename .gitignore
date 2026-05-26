@@ -3,6 +3,10 @@
 /firebase-debug.*.log
 .firebaserc
 
+.idea/
+.junie/
+package-lock.json
+
 # Firebase Hosting
 *.cache
 hosting/.cache
@@ -16,6 +20,7 @@ hosting/.cache
 /firebase-*.zip
 /.firebase/
 /emulator-ui/
+node_modules/
 
 # Logs
 *.log
