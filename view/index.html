@@ -59,6 +59,27 @@
         padding: 12px 16px;
         font-size: 0.92rem;
       }
+      th {
+        cursor: pointer;
+        user-select: none;
+        white-space: nowrap;
+      }
+      th:hover {
+        background: #1d5cd8;
+      }
+      th::after {
+        content: " \2195";
+        opacity: 0.35;
+        font-size: 0.8em;
+      }
+      th.sort-asc::after {
+        content: " \2191";
+        opacity: 1;
+      }
+      th.sort-desc::after {
+        content: " \2193";
+        opacity: 1;
+      }
       tbody tr {
         border-top: 1px solid #e8edf5;
       }
@@ -94,11 +115,11 @@
       <table id="table">
         <thead>
           <tr>
-            <th>#</th>
-            <th>First Name</th>
-            <th>Last Name</th>
-            <th>Type</th>
-            <th>Registered At</th>
+            <th data-col="seq">#</th>
+            <th data-col="firstName">First Name</th>
+            <th data-col="lastName">Last Name</th>
+            <th data-col="walkinType">Type</th>
+            <th data-col="createdAt">Registered At</th>
           </tr>
         </thead>
         <tbody id="tbody">
@@ -125,26 +146,57 @@
       const statusEl = document.getElementById("status");
       const tbody = document.getElementById("tbody");
       const countEl = document.getElementById("count");
+      const headers = document.querySelectorAll("thead th[data-col]");
+
+      let allEntries = [];
+      let sortCol = "seq";
+      let sortDir = "desc";
 
       function badgeClass(type) {
         return type === "Parent/Guardian" ? "ParentGuardian" : type;
       }
 
-      function formatDate(iso) {
-        if (!iso) return "—";
-        return new Date(iso).toLocaleString();
+      function formatDate(ts) {
+        if (!ts) return "—";
+        return new Date(ts).toLocaleString();
       }
 
-      function render(entries) {
+      function updateHeaderClasses() {
+        headers.forEach(th => {
+          th.classList.remove("sort-asc", "sort-desc");
+          if (th.dataset.col === sortCol) {
+            th.classList.add(sortDir === "asc" ? "sort-asc" : "sort-desc");
+          }
+        });
+      }
+
+      function sortedEntries() {
+        return [...allEntries].sort((a, b) => {
+          let av, bv;
+          switch (sortCol) {
+            case "seq":        av = a.seq;                      bv = b.seq;                      break;
+            case "firstName":  av = a.firstName.toLowerCase();  bv = b.firstName.toLowerCase();  break;
+            case "lastName":   av = a.lastName.toLowerCase();   bv = b.lastName.toLowerCase();   break;
+            case "walkinType": av = a.walkinType.toLowerCase(); bv = b.walkinType.toLowerCase(); break;
+            case "createdAt":  av = a.createdAt || 0;           bv = b.createdAt || 0;           break;
+          }
+          if (av < bv) return sortDir === "asc" ? -1 : 1;
+          if (av > bv) return sortDir === "asc" ? 1 : -1;
+          return 0;
+        });
+      }
+
+      function render() {
+        const entries = sortedEntries();
         if (entries.length === 0) {
           tbody.innerHTML = '<tr><td colspan="5" id="empty">No registrations yet.</td></tr>';
           countEl.textContent = "";
           return;
         }
         countEl.textContent = `${entries.length} registration${entries.length !== 1 ? "s" : ""}`;
-        tbody.innerHTML = entries.map((entry, i) => `
+        tbody.innerHTML = entries.map(entry => `
           <tr>
-            <td>${entries.length - i}</td>
+            <td>${entry.seq}</td>
             <td>${entry.firstName}</td>
             <td>${entry.lastName}</td>
             <td><span class="badge ${badgeClass(entry.walkinType)}">${entry.walkinType}</span></td>
@@ -153,6 +205,22 @@
         `).join("");
       }
 
+      headers.forEach(th => {
+        th.addEventListener("click", () => {
+          const col = th.dataset.col;
+          if (sortCol === col) {
+            sortDir = sortDir === "asc" ? "desc" : "asc";
+          } else {
+            sortCol = col;
+            sortDir = "asc";
+          }
+          updateHeaderClasses();
+          render();
+        });
+      });
+
+      updateHeaderClasses();
+
       firebase.initializeApp(window.FIREBASE_CONFIG);
       const db = firebase.database();
 
@@ -160,8 +228,8 @@
         .then(() => {
           db.ref("walkins").on("value", (snapshot) => {
             const val = snapshot.val() || {};
-            const entries = Object.values(val).reverse();
-            render(entries);
+            allEntries = Object.values(val).map((e, i) => ({ ...e, seq: i + 1 }));
+            render();
           }, (err) => {
             statusEl.textContent = "Failed to load registrations: " + (err.message || err);
           });
