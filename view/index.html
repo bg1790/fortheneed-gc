@@ -241,10 +241,12 @@
       tbody.addEventListener("click", (e) => {
         const btn = e.target.closest(".btn-delete");
         if (!btn) return;
-        const key = btn.dataset.key;
-        if (!confirm("Delete this registration?")) return;
-        db.ref("walkins").child(key).remove().catch((err) => {
+        btn.disabled = true;
+        btn.textContent = "Deleting…";
+        db.ref("walkins").child(btn.dataset.key).remove().catch((err) => {
           statusEl.textContent = "Delete failed: " + (err.message || err);
+          btn.disabled = false;
+          btn.textContent = "Delete";
         });
       });
 
