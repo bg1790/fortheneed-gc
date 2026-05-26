@@ -1,0 +1,8 @@
+{
+  "rules": {
+    "walkins": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    }
+  }
+}
