@@ -144,8 +144,29 @@
       .pagination button:not(:disabled):hover {
         background: #eaf1ff;
       }
-      #page-indicator {
-        color: #1f2a44;
+      #page-numbers {
+        display: flex;
+        gap: 4px;
+      }
+      #page-numbers button {
+        padding: 6px 10px;
+        border: 1px solid #c7d2e5;
+        border-radius: 8px;
+        background: #fff;
+        color: #2b6ef2;
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        min-width: 36px;
+        text-align: center;
+      }
+      #page-numbers button.active {
+        background: #2b6ef2;
+        color: #fff;
+        border-color: #2b6ef2;
+      }
+      #page-numbers button:hover:not(.active) {
+        background: #eaf1ff;
       }
     </style>
   </head>
@@ -175,7 +196,7 @@
       </table>
       <div id="pagination" class="pagination" hidden>
         <button id="prev-page" type="button">&larr; Prev</button>
-        <span id="page-indicator"></span>
+        <span id="page-numbers"></span>
         <button id="next-page" type="button">Next &rarr;</button>
       </div>
     </div>
@@ -203,7 +224,7 @@
       const paginationEl = document.getElementById("pagination");
       const prevBtn = document.getElementById("prev-page");
       const nextBtn = document.getElementById("next-page");
-      const pageIndicator = document.getElementById("page-indicator");
+      const pageNumbersEl = document.getElementById("page-numbers");
 
       let allEntries = [];
       let sortCol = "seq";
@@ -276,7 +297,15 @@
         `).join("");
 
         paginationEl.hidden = pages <= 1;
-        pageIndicator.textContent = `Page ${currentPage} of ${pages}`;
+        pageNumbersEl.innerHTML = "";
+        for (let p = 1; p <= pages; p++) {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.textContent = p;
+          if (p === currentPage) btn.classList.add("active");
+          btn.addEventListener("click", () => { currentPage = p; render(); });
+          pageNumbersEl.appendChild(btn);
+        }
         prevBtn.disabled = currentPage === 1;
         nextBtn.disabled = currentPage === pages;
       }
