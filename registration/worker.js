@@ -1,4 +1,4 @@
-function normalizeName(name) {
+  function normalizeName(name) {
   const cleaned = name.trim().replace(/\s+/g, " ");
   if (!cleaned) return "";
   return cleaned
