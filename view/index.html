@@ -122,7 +122,11 @@
     </style>
   </head>
   <body>
+    <script>if (sessionStorage.getItem("ftn_auth") !== "1") location.replace("/");</script>
     <div class="container">
+      <div style="margin-bottom:16px">
+        <a href="/" style="display:inline-block;padding:6px 14px;border:2px solid #2b6ef2;border-radius:8px;color:#2b6ef2;font-weight:600;font-size:0.9rem;text-decoration:none;">&#8592; Home</a>
+      </div>
       <h1>Walk-in Registrations</h1>
       <p id="count"></p>
       <p id="status" aria-live="polite"></p>

@@ -63,10 +63,92 @@
         color: #2b6ef2;
         font-weight: 600;
         font-size: 1rem;
+        cursor: pointer;
       }
       .actions a:hover {
         background: #eaf1ff;
       }
+
+      /* Modal */
+      #modal-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.55);
+        z-index: 100;
+        place-items: center;
+      }
+      #modal-overlay.open {
+        display: grid;
+      }
+      #modal-box {
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 24px 64px rgba(15, 23, 42, 0.22);
+        padding: 28px 28px 24px;
+        width: min(92vw, 380px);
+      }
+      #modal-box h2 {
+        margin: 0 0 20px;
+        font-size: 1.25rem;
+        color: #1f2a44;
+      }
+      #signin-form {
+        display: grid;
+        gap: 12px;
+      }
+      #signin-form label {
+        font-size: 0.92rem;
+        color: #1f2a44;
+        display: grid;
+        gap: 5px;
+      }
+      #signin-form input {
+        width: 100%;
+        box-sizing: border-box;
+        border: 1px solid #c7d2e5;
+        border-radius: 8px;
+        font: inherit;
+        padding: 10px 12px;
+      }
+      #signin-form input:focus {
+        outline: none;
+        border-color: #2b6ef2;
+        box-shadow: 0 0 0 3px rgba(43, 110, 242, 0.15);
+      }
+      #si-error {
+        margin: 0;
+        min-height: 18px;
+        font-size: 0.88rem;
+        color: #b91c1c;
+      }
+      .modal-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-top: 4px;
+      }
+      .modal-actions button {
+        padding: 10px 16px;
+        border-radius: 8px;
+        font: inherit;
+        font-weight: 600;
+        font-size: 0.95rem;
+        cursor: pointer;
+        border: none;
+      }
+      #si-submit {
+        background: #2b6ef2;
+        color: #fff;
+      }
+      #si-submit:hover { background: #1d5cd8; }
+      #si-submit:disabled { background: #7d95ca; cursor: not-allowed; }
+      #si-cancel {
+        background: #f1f4fb;
+        color: #1f2a44;
+        border: 1px solid #c7d2e5;
+      }
+      #si-cancel:hover { background: #e2e8f4; }
     </style>
   </head>
   <body>
@@ -74,9 +156,109 @@
     <main class="card">
       <h1>Walk-in Volunteer Event</h1>
       <nav class="actions">
-        <a href="/registration/">Registration</a>
-        <a href="/view/">View</a>
+        <a data-href="/registration/">Registration</a>
+        <a data-href="/view/">View</a>
       </nav>
     </main>
+
+    <div id="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <div id="modal-box">
+        <h2 id="modal-title">Sign In</h2>
+        <form id="signin-form" novalidate>
+          <label>
+            Email
+            <input type="email" id="si-email" autocomplete="email" required />
+          </label>
+          <label>
+            Password
+            <input type="password" id="si-password" autocomplete="current-password" required />
+          </label>
+          <p id="si-error" aria-live="polite"></p>
+          <div class="modal-actions">
+            <button type="submit" id="si-submit">Sign In</button>
+            <button type="button" id="si-cancel">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script>
+      const CRED_HASHES = new Set([
+        "3f1d1ef130b315dd1d5142661e0ee063200a22e6f990c0d9220c19a00efd7b33",
+"c5f9600ede57c99ca2057445c5447f971cc5071cae1a67c31b6ecacfbacbcddf",
+      ]);
+
+      async function sha256(str) {
+        const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str));
+        return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
+      }
+
+      let pendingHref = null;
+
+      const overlay = document.getElementById("modal-overlay");
+      const emailInput = document.getElementById("si-email");
+      const passwordInput = document.getElementById("si-password");
+      const errorEl = document.getElementById("si-error");
+      const submitBtn = document.getElementById("si-submit");
+
+      function openModal(href) {
+        pendingHref = href;
+        errorEl.textContent = "";
+        emailInput.value = "";
+        passwordInput.value = "";
+        overlay.classList.add("open");
+        setTimeout(() => emailInput.focus(), 50);
+      }
+
+      function closeModal() {
+        overlay.classList.remove("open");
+        pendingHref = null;
+      }
+
+      // If already signed in this session, navigate directly
+      document.querySelectorAll(".actions a[data-href]").forEach(link => {
+        link.addEventListener("click", (e) => {
+          e.preventDefault();
+          const href = link.dataset.href;
+          if (sessionStorage.getItem("ftn_auth") === "1") {
+            location.href = href;
+          } else {
+            openModal(href);
+          }
+        });
+      });
+
+      document.getElementById("si-cancel").addEventListener("click", closeModal);
+
+      overlay.addEventListener("click", (e) => {
+        if (e.target === overlay) closeModal();
+      });
+
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") closeModal();
+      });
+
+      document.getElementById("signin-form").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        errorEl.textContent = "";
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Signing in…";
+
+        const email = emailInput.value.trim().toLowerCase();
+        const password = passwordInput.value;
+        const hash = await sha256(email + ":" + password);
+
+        if (CRED_HASHES.has(hash)) {
+          sessionStorage.setItem("ftn_auth", "1");
+          location.href = pendingHref;
+        } else {
+          errorEl.textContent = "Incorrect email or password.";
+          submitBtn.disabled = false;
+          submitBtn.textContent = "Sign In";
+          passwordInput.value = "";
+          passwordInput.focus();
+        }
+      });
+    </script>
   </body>
 </html>

@@ -73,6 +73,10 @@
     </style>
   </head>
   <body>
+    <script>if (sessionStorage.getItem("ftn_auth") !== "1") location.replace("/");</script>
+    <div style="position:fixed;top:16px;left:16px">
+      <a href="/" style="display:inline-block;padding:6px 14px;border:2px solid #2b6ef2;border-radius:8px;color:#2b6ef2;font-weight:600;font-size:0.9rem;text-decoration:none;background:#fff;">&#8592; Home</a>
+    </div>
     <main class="card">
       <h1>Walk-in Registration</h1>
       <form id="walkin-form">
