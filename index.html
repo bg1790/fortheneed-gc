@@ -33,88 +33,33 @@
         margin: 0 0 16px;
         font-size: 1.35rem;
       }
-      form {
+      .actions {
         display: grid;
         gap: 12px;
       }
-      label {
-        font-size: 0.92rem;
-        color: #1f2a44;
-      }
-      input,
-      select,
-      button {
-        width: 100%;
-        box-sizing: border-box;
-        margin-top: 6px;
-        border: 1px solid #c7d2e5;
+      .actions a {
+        display: block;
+        text-align: center;
+        text-decoration: none;
+        padding: 12px 16px;
         border-radius: 8px;
-        font: inherit;
-        padding: 10px 12px;
-      }
-      button {
-        margin-top: 4px;
-        border: none;
         background: #2b6ef2;
         color: #fff;
         font-weight: 600;
-        cursor: pointer;
+        font-size: 1rem;
       }
-      button:disabled {
-        background: #7d95ca;
-        cursor: not-allowed;
-      }
-      #status {
-        margin-top: 12px;
-        min-height: 20px;
-        font-size: 0.9rem;
-        color: #233154;
+      .actions a:hover {
+        background: #1d5cd8;
       }
     </style>
   </head>
   <body>
     <main class="card">
-      <h1>Walk-in Registration</h1>
-      <form id="walkin-form">
-        <label for="firstName">
-          First name
-          <input id="firstName" name="firstName" autocomplete="given-name" required />
-        </label>
-        <label for="lastName">
-          Last name
-          <input id="lastName" name="lastName" autocomplete="family-name" required />
-        </label>
-        <label for="walkinType">
-          Walk-in type
-          <select id="walkinType" name="walkinType" required>
-            <option value="Volunteer">Volunteer</option>
-            <option value="Arrow">Arrow</option>
-            <option value="Parent/Guardian">Parent/Guardian</option>
-            <option value="Guest">Guest</option>
-          </select>
-        </label>
-        <button id="saveBtn" type="submit">Save</button>
-      </form>
-      <p id="status" aria-live="polite"></p>
+      <h1>Walk-in Volunteer Event</h1>
+      <nav class="actions">
+        <a href="/registration/">Registration</a>
+        <a href="/view/">View</a>
+      </nav>
     </main>
-
-    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-database-compat.js"></script>
-    <script>
-      window.FIREBASE_CONFIG ={
-        "projectId": "gcftnproject",
-        "appId": "1:337643229915:web:0c2ca18d646f0e49b872fe",
-        "storageBucket": "gcftnproject.firebasestorage.app",
-        "apiKey": "AIzaSyC_R9sZCW48LH2MfbgM0cGp7toU_Ube7wY",
-        "authDomain": "gcftnproject.firebaseapp.com",
-        "messagingSenderId": "337643229915",
-        "measurementId": "G-T9222YZ7CZ",
-        "projectNumber": "337643229915",
-        "version": "2"
-      };
-    </script>
-
-    <script src="./app.js"></script>
   </body>
 </html>
