@@ -2,50 +2,55 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Project Layout
+
+The actual codebase lives in `fortheneed-gc/` — that subdirectory is its own git repository (`git@github.com:bg1790/fortheneed-gc.git`, branch `main`).
+
+```
+fortheneed-gc/
+  index.html      # Walk-in registration form (the real app entry point)
+  app.js          # Main Firebase + form logic
+  worker.js       # Web Worker for validation/normalization
+  public/
+    index.html    # Firebase Hosting landing page only
+  firebase.json   # Hosting config — deploys ONLY public/ to Firebase
+  package.json    # Single dependency: firebase@^12.13.0
+```
+
+**Important:** `firebase.json` deploys only the `public/` folder. The form app (`index.html`, `app.js`, `worker.js` at root) is not currently wired into the Firebase Hosting deployment.
+
 ## Commands
 
 ```bash
-# Install dependencies (firebase-tools CLI only — no build step)
-npm install
-
-# Serve locally (serves root, which is what Firebase Hosting deploys)
-npx serve .
+# Install dependencies
+cd fortheneed-gc && npm install
 
 # Deploy to Firebase Hosting (requires prior firebase login)
-firebase deploy
+cd fortheneed-gc && firebase deploy
+
+# Serve locally (any static server works, e.g.)
+cd fortheneed-gc && npx serve .
 ```
 
 No build, test, or lint tooling is configured.
 
 ## Architecture
 
-**Stack:** Vanilla JS (ES6+), Firebase compat SDK (v10.12.5 via CDN), Firebase Realtime Database, Firebase Anonymous Auth, Web Workers. No framework, no bundler.
+**Stack:** Vanilla JS (ES6+), Firebase Realtime Database, Firebase Anonymous Auth, Web Workers. No framework, no bundler.
 
-**Two separate pages:**
-- `index.html` (root) — the walk-in registration form; this is the real app
-- `public/index.html` — a Firebase Hosting connectivity check page; fetches `/__/firebase/init.json` at runtime to auto-load config
-
-**Deployment:** `firebase.json` sets `"public": "."`, so Firebase Hosting deploys the entire root directory (excluding `firebase.json`, `package*.json`, dotfiles, and `node_modules`). Both pages are live after deploy.
-
-**Firebase config:** `index.html` inlines `window.FIREBASE_CONFIG` as a script tag before loading `app.js`. The `public/index.html` landing page fetches config dynamically from `/__/firebase/init.json` instead.
-
-**Data flow for form submission:**
+**Data flow:**
 
 ```
-User submits form (index.html)
-  → app.js reads firstName, lastName, walkinType from FormData
-  → validates walkinType against ALLOWED_TYPES client-side
-  → processInWorker(data): postMessage to worker.js (promise keyed by request ID)
-    → worker.js normalizes names (title-case, trim/collapse whitespace)
-    → validates required fields and walkinType enum
-    → returns {firstName, lastName, walkinType, createdAt: Date.now()}
+User submits form
+  → app.js collects {firstName, lastName, walkinType}
+  → processInWorker(data): sends to worker.js via postMessage (promise-based, keyed by request ID)
+    → worker.js validates required fields, title-cases names, validates walkinType enum
+    → returns normalized payload + createdAt timestamp
   → app.js writes payload to Firebase Realtime Database at /walkins/{pushId}
 ```
 
-**Worker pattern:** `workerRequests` Map in `app.js` tracks in-flight calls by integer ID. Each `processInWorker()` increments `workerRequestId`, stores `{resolve, reject}` handlers, and returns a Promise that settles when the worker echoes back the matching ID.
+**Firebase setup:** `app.js` reads `window.FIREBASE_CONFIG` for the Firebase project credentials. The `public/index.html` landing page auto-loads config from Firebase Hosting's `/__/firebase/init.json` endpoint instead.
 
-**Auth:** Anonymous sign-in runs at startup. If it fails, the form still renders but a status message warns the user; the save will fail at the database write due to security rules.
+**Worker pattern:** `worker.js` uses a request-ID map so multiple in-flight calls can be tracked. Each `processInWorker()` call returns a Promise that resolves/rejects when the worker responds with the matching ID.
 
-**Walk-in types:** `["Volunteer", "Arrow", "Parent/Guardian", "Guest"]` — defined as `ALLOWED_TYPES` in `app.js` and passed to the worker for validation. Adding a new type requires updating both the `<select>` in `index.html` and the `ALLOWED_TYPES` array in `app.js`.
-
-**Database rules:** Referenced in `firebase.json` as `database.rules.json` — this file must exist before deploying the database rules.
+**Auth:** Anonymous sign-in is required before any database write. If auth fails, the form is disabled with an error message.
