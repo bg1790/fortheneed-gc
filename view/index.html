@@ -119,6 +119,34 @@
         color: #6b7a99;
         font-size: 0.95rem;
       }
+      .pagination {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 12px;
+        margin-top: 16px;
+        font-size: 0.9rem;
+      }
+      .pagination button {
+        padding: 6px 14px;
+        border: 1px solid #c7d2e5;
+        border-radius: 8px;
+        background: #fff;
+        color: #2b6ef2;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .pagination button:disabled {
+        color: #94a3b8;
+        cursor: not-allowed;
+        background: #f1f4fb;
+      }
+      .pagination button:not(:disabled):hover {
+        background: #eaf1ff;
+      }
+      #page-indicator {
+        color: #1f2a44;
+      }
     </style>
   </head>
   <body>
@@ -145,6 +173,11 @@
           <tr><td colspan="6" id="empty">Loading…</td></tr>
         </tbody>
       </table>
+      <div id="pagination" class="pagination" hidden>
+        <button id="prev-page" type="button">&larr; Prev</button>
+        <span id="page-indicator"></span>
+        <button id="next-page" type="button">Next &rarr;</button>
+      </div>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
@@ -162,14 +195,20 @@
       };
     </script>
     <script>
+      const PAGE_SIZE = 10;
       const statusEl = document.getElementById("status");
       const tbody = document.getElementById("tbody");
       const countEl = document.getElementById("count");
       const headers = document.querySelectorAll("thead th[data-col]");
+      const paginationEl = document.getElementById("pagination");
+      const prevBtn = document.getElementById("prev-page");
+      const nextBtn = document.getElementById("next-page");
+      const pageIndicator = document.getElementById("page-indicator");
 
       let allEntries = [];
       let sortCol = "seq";
       let sortDir = "asc";
+      let currentPage = 1;
       let db = null;
 
       function badgeClass(type) {
@@ -208,13 +247,24 @@
 
       function render() {
         const entries = sortedEntries();
-        if (entries.length === 0) {
+        const total = entries.length;
+        if (total === 0) {
           tbody.innerHTML = '<tr><td colspan="6" id="empty">No registrations yet.</td></tr>';
           countEl.textContent = "";
+          paginationEl.hidden = true;
           return;
         }
-        countEl.textContent = `${entries.length} registration${entries.length !== 1 ? "s" : ""}`;
-        tbody.innerHTML = entries.map(entry => `
+
+        const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+        if (currentPage > pages) currentPage = pages;
+        if (currentPage < 1) currentPage = 1;
+
+        const start = (currentPage - 1) * PAGE_SIZE;
+        const end = Math.min(start + PAGE_SIZE, total);
+        const pageEntries = entries.slice(start, end);
+
+        countEl.textContent = `Showing ${start + 1}–${end} of ${total} registration${total !== 1 ? "s" : ""}`;
+        tbody.innerHTML = pageEntries.map(entry => `
           <tr>
             <td>${entry.seq}</td>
             <td>${entry.firstName}</td>
@@ -224,6 +274,11 @@
             <td><button class="btn-delete" data-key="${entry._key}">Delete</button></td>
           </tr>
         `).join("");
+
+        paginationEl.hidden = pages <= 1;
+        pageIndicator.textContent = `Page ${currentPage} of ${pages}`;
+        prevBtn.disabled = currentPage === 1;
+        nextBtn.disabled = currentPage === pages;
       }
 
       headers.forEach(th => {
@@ -235,9 +290,21 @@
             sortCol = col;
             sortDir = "asc";
           }
+          currentPage = 1;
           updateHeaderClasses();
           render();
         });
+      });
+
+      prevBtn.addEventListener("click", () => {
+        if (currentPage > 1) {
+          currentPage--;
+          render();
+        }
+      });
+      nextBtn.addEventListener("click", () => {
+        currentPage++;
+        render();
       });
 
       updateHeaderClasses();
